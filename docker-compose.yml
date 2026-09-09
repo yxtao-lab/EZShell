@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: docker.m.daocloud.io/library/postgres:16-alpine
+    container_name: ezshell-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ezshell
+      POSTGRES_PASSWORD: ezshell
+      POSTGRES_DB: ezshell
+    volumes:
+      - ezshell_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ezshell -d ezshell"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # 若本机 6379 已被占用，可改用下方服务（映射 6380）并把 .env 中 REDIS_URL 改为 redis://localhost:6380
+  redis:
+    image: docker.m.daocloud.io/library/redis:7-alpine
+    container_name: ezshell-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - ezshell_redis_data:/data
+    profiles:
+      - full
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  ezshell_pg_data:
+  ezshell_redis_data:

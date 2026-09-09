@@ -1,0 +1,29 @@
+# 项目基础规范
+- 语言要求：所有回复、代码注释、提交信息必须使用中文。
+- 代码风格：变量和函数命名使用驼峰式 (camelCase)，常量使用全大写加下划线 (UPPER_SNAKE_CASE)。
+- 修改代码前，必须先阅读并理解当前的代码上下文，不要盲目重构。
+
+# 技术栈约束
+- 前端组件统一使用函数式组件 + Hooks。
+- 样式统一使用 Tailwind CSS。
+- 禁止在代码中硬编码敏感信息（如 API Key、密码），必须使用环境变量。
+
+# 布局与间距规范
+- 页面布局统一使用 `PageShell` 组件；主内容区应使用 `page-table-flex` 包裹表格，避免直接使用 `flush-body` 贴边布局。
+- 管理端页面间距统一使用 CSS 变量：`--layout-page-inset`（卡片内边距，默认 20px）、`--layout-page-gap`（组件间距，默认 16px）。
+- 通用间距阶梯：`--spacing-xs: 4px`、`--spacing-sm: 8px`、`--spacing-md: 16px`、`--spacing-lg: 20px`、`--spacing-xl: 24px`。
+- 列表页必须保证：卡片内边距 ≥ 20px、筛选区与表格间距 ≥ 16px、表格单元格内边距 8px 16px。
+- 禁止在业务组件中写死 12px 以下的小间距（特殊情况如图标内边距除外）。
+
+# Git 提交规范
+- 提交信息必须遵循 Conventional Commits 格式，例如：`feat(auth): 添加用户登录接口` 或 `fix(ui): 修复按钮点击无效的问题`。
+- 常用 type 包括：feat, fix, docs, style, refactor, test, chore。
+- 第一行概述，第二行空行，第三行详细描述。
+
+# 安全与性能
+- 所有用户输入在用于数据库查询前必须进行验证或参数化，防止 SQL 注入。
+- 异步函数必须包含 try...catch 进行错误处理。
+
+# 需求增补登记（相对项目任务书）
+- 超出《科技项目任务书》范围的需求新增/变更/调整，必须登记 `docs/需求增补表.xlsx`。
+- 细则见 `.cursor/rules/requirement-supplement.mdc`（始终生效）。

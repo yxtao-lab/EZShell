@@ -1,0 +1,36 @@
+node_modules/
+dist/
+out/
+build/
+.turbo/
+*.log
+.DS_Store
+.env
+.env.local
+.env.*.local
+*.local
+
+# Electron
+apps/desktop/release/
+
+# Nest / Prisma
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
+apps/api/*.db
+apps/api/*.db-journal
+apps/api/dev.db
+apps/api/dev.db-journal
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# 覆盖率与缓存
+coverage/
+.cache/
+*.tsbuildinfo
+
+# uni-app
+apps/mobile/unpackage/
+apps/mobile/dist/

@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // 本地 P0 默认 SQLite，便于在 Docker 镜像拉取受限时开发。
+  // 生产 / 联调请改回 postgresql，并使用仓库根目录 docker-compose 启动 Postgres。
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanCode {
+  free
+  pro
+  team
+}
+
+enum SubscriptionStatus {
+  none
+  active
+  grace
+  expired
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+}
+
+enum OrderStatus {
+  pending
+  paid
+  failed
+  closed
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  nickname     String?
+  banned       Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  refreshTokens RefreshToken[]
+  devices      DeviceSession[]
+  subscription Subscription?
+  orders       Order[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model DeviceSession {
+  id           String    @id @default(cuid())
+  userId       String
+  deviceName   String?
+  platform     String?
+  lastSeenAt   DateTime  @default(now())
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Plan {
+  id                String         @id @default(cuid())
+  code              PlanCode       @unique
+  name              String
+  maxHosts          Int?
+  cloudSync         Boolean        @default(false)
+  maxDevices        Int?
+  teamSeats         Int?
+  sharedHostGroups  Boolean        @default(false)
+  monthlyPriceCents Int            @default(0)
+  yearlyPriceCents  Int            @default(0)
+  active            Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  subscriptions     Subscription[]
+  orders            Order[]
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String             @unique
+  planId    String
+  status    SubscriptionStatus @default(none)
+  startsAt  DateTime?
+  expiresAt DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan               @relation(fields: [planId], references: [id])
+}
+
+model Order {
+  id          String        @id @default(cuid())
+  userId      String
+  planId      String
+  cycle       BillingCycle
+  amountCents Int
+  status      OrderStatus   @default(pending)
+  paidAt      DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan          @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id        String    @id @default(cuid())
+  adminId   String?
+  action    String
+  target    String?
+  detail    Json?
+  createdAt DateTime  @default(now())
+  admin     AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  forceUpdate Boolean  @default(false)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// 角色权限表结构预留（二期拆分运营/财务）
+model Role {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  name        String
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id         String @id @default(cuid())
+  roleId     String
+  permission String
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permission])
+}

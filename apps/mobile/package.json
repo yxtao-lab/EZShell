@@ -1,0 +1,25 @@
+{
+  "name": "@ezshell/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "EZShell 移动端（P0：Vue3 H5 壳；P4 对齐 uni-app 完整能力）",
+  "scripts": {
+    "dev:h5": "vite --port 5175",
+    "build": "vue-tsc -b && vite build",
+    "lint": "vue-tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@ezshell/sdk": "workspace:*",
+    "@ezshell/shared": "workspace:*",
+    "@ezshell/ui-tokens": "workspace:*",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vue-tsc": "^2.2.8"
+  }
+}

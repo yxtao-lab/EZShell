@@ -1,0 +1,55 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--ez-font-sans);
+  background: var(--ez-color-bg);
+  color: var(--ez-color-text);
+}
+
+a {
+  color: var(--ez-color-primary);
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.btn {
+  border: none;
+  border-radius: var(--ez-radius-md);
+  background: var(--ez-color-primary);
+  color: #fff;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--ez-color-primary-hover);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--ez-radius-md);
+  border: 1px solid var(--ez-color-border);
+  background: var(--ez-color-bg-elevated);
+  color: var(--ez-color-text);
+}
+
+.error {
+  color: var(--ez-color-danger);
+  font-size: 14px;
+}

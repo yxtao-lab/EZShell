@@ -1,0 +1,17 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  font-family: var(--ez-font-sans);
+  background: var(--ez-color-bg);
+  color: var(--ez-color-text);
+}
+
+button {
+  font: inherit;
+}

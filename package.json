@@ -1,0 +1,27 @@
+{
+  "name": "ezshell",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EZShell — 跨端 SSH 运维工具与 SaaS 会员平台",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @ezshell/api dev",
+    "dev:desktop": "pnpm --filter @ezshell/desktop dev",
+    "dev:mobile": "pnpm --filter @ezshell/mobile dev:h5",
+    "dev:admin": "pnpm --filter @ezshell/web-admin dev",
+    "build": "pnpm -r --filter \"./packages/**\" build && pnpm -r --filter \"./apps/**\" build",
+    "build:packages": "pnpm -r --filter \"./packages/**\" build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r --if-present test",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @ezshell/api prisma:migrate",
+    "db:seed": "pnpm --filter @ezshell/api prisma:seed"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}

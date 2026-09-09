@@ -1,0 +1,49 @@
+:root {
+  /* 基色：深蓝海军风（略提亮，减轻压抑感） */
+  --ez-color-bg: #252a42;
+  --ez-color-bg-deep: #1c2035;
+  --ez-color-bg-sidebar: #1e2338;
+  --ez-color-bg-elevated: #2f3550;
+  --ez-color-surface: #3a4060;
+  --ez-color-surface-hover: #454c6e;
+
+  /* 主色：青绿点缀，与海军底对比清晰 */
+  --ez-color-primary: #2dd4bf;
+  --ez-color-primary-hover: #14b8a6;
+  --ez-color-primary-muted: rgba(45, 212, 191, 0.14);
+  --ez-color-primary-ink: #042f2e;
+
+  --ez-color-text: #eef0f7;
+  --ez-color-text-muted: #a8b0c8;
+  --ez-color-border: rgba(168, 176, 200, 0.18);
+  --ez-color-border-strong: rgba(168, 176, 200, 0.3);
+
+  --ez-color-success: #34d399;
+  --ez-color-warning: #fbbf24;
+  --ez-color-danger: #f87171;
+
+  --ez-terminal-bg: #1c2138;
+  --ez-terminal-fg: #eef0f7;
+  --ez-terminal-cursor: #2dd4bf;
+
+  --ez-radius-sm: 6px;
+  --ez-radius-md: 10px;
+  --ez-radius-lg: 14px;
+  --ez-space-1: 4px;
+  --ez-space-2: 8px;
+  --ez-space-3: 12px;
+  --ez-space-4: 16px;
+  --ez-space-6: 24px;
+
+  --ez-font-sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --ez-font-mono: "Cascadia Code", "Sarasa Mono SC", "Consolas", monospace;
+
+  --ez-shadow-panel: 0 8px 28px rgba(12, 14, 28, 0.28);
+
+  /*
+   * 布局断点约定（在 @media 中直接写像素，勿依赖自定义属性）：
+   * 1100px — 侧栏收成图标栏
+   * 800px  — 面板内边距收紧、表单/搜索单列
+   * 640px  — 更紧凑顶栏与列表
+   */
+}
