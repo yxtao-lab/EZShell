@@ -104,7 +104,17 @@ function createWindow() {
 
   if (isDev) {
     void mainWindow.loadURL(DEV_URL);
-    mainWindow.webContents.openDevTools({ mode: "detach" });
+    // 默认不自动打开 DevTools，避免 Chromium Autofill CDP 噪音刷屏；
+    // 需要时设 EZSHELL_OPEN_DEVTOOLS=1，或按 F12 切换。
+    if (process.env.EZSHELL_OPEN_DEVTOOLS === "1") {
+      mainWindow.webContents.openDevTools({ mode: "detach" });
+    }
+    mainWindow.webContents.on("before-input-event", (event, input) => {
+      if (input.type === "keyDown" && input.key === "F12") {
+        mainWindow?.webContents.toggleDevTools();
+        event.preventDefault();
+      }
+    });
   } else {
     void mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }

@@ -3,18 +3,11 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { api } from "../lib/api";
 import { setTokens } from "../lib/auth-store";
+import type { UserProfile } from "@ezshell/sdk";
 import type { Entitlements } from "@ezshell/shared";
 
 const router = useRouter();
-const profile = ref<{
-  email: string;
-  nickname: string | null;
-  membership: {
-    planName: string;
-    status: string;
-    expiresAt: string | null;
-  };
-} | null>(null);
+const profile = ref<UserProfile | null>(null);
 const entitlements = ref<Entitlements | null>(null);
 const error = ref("");
 
@@ -26,15 +19,7 @@ const error = ref("");
 async function load(): Promise<void> {
   try {
     const [me, ents] = await Promise.all([
-      api.getMe() as Promise<{
-        email: string;
-        nickname: string | null;
-        membership: {
-          planName: string;
-          status: string;
-          expiresAt: string | null;
-        };
-      }>,
+      api.getMe(),
       api.getEntitlements(),
     ]);
     profile.value = me;

@@ -11,6 +11,16 @@ export interface AuthUser {
   nickname: string | null;
 }
 
+/** 个人中心资料（含会员摘要，对应 GET /users/me） */
+export interface UserProfile extends AuthUser {
+  membership: {
+    planCode: string;
+    planName: string;
+    status: string;
+    expiresAt: string | null;
+  };
+}
+
 export interface LoginResult {
   user: AuthUser;
   tokens: TokenPair;
@@ -107,11 +117,11 @@ export class EzshellSdk {
   }
 
   /**
-   * 查询当前用户资料。
+   * 查询当前用户资料（含会员摘要）。
    *
-   * @returns 用户信息
+   * @returns 用户资料与会员状态
    */
-  async getMe(): Promise<AuthUser> {
+  async getMe(): Promise<UserProfile> {
     return this.request("GET", "/users/me");
   }
 

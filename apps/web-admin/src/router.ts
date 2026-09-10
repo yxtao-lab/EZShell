@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import LoginView from "../views/LoginView.vue";
-import DashboardView from "../views/DashboardView.vue";
-import { getTokens } from "./auth-store";
+import LoginView from "./views/LoginView.vue";
+import DashboardView from "./views/DashboardView.vue";
+import { getTokens } from "./lib/auth-store";
 
 export const router = createRouter({
   history: createWebHistory(),
