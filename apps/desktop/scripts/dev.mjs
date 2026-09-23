@@ -62,6 +62,7 @@ async function main() {
       },
     },
     server: {
+      host: "127.0.0.1",
       port: 5174,
       strictPort: true,
     },
@@ -77,10 +78,11 @@ async function main() {
   });
 
   await server.listen();
-  const address = server.resolvedUrls?.local[0] ?? "http://localhost:5174";
+  // 强制 127.0.0.1，避免 localhost 解析到 ::1 时撞上其它项目占用的 5174
+  const address = "http://127.0.0.1:5174/";
   await waitForVite(address);
   // eslint-disable-next-line no-console
-  console.log(`桌面渲染进程：${address}（支持 Vite 热更新）`);
+  console.log(`桌面渲染进程：${address}（Vite HMR）`);
 
   const electronBin = require.resolve("electron/cli.js");
   /** @type {import('node:child_process').ChildProcess | null} */
@@ -118,8 +120,13 @@ async function main() {
 
   const watchDir = path.join(root, "electron");
   let reloadTimer = /** @type {NodeJS.Timeout | null} */ (null);
+  let watchReady = false;
+  // Windows 上 fs.watch 启动瞬间会扫到一批「假变更」，跳过首波避免连环重启白屏
+  setTimeout(() => {
+    watchReady = true;
+  }, 1500);
   fs.watch(watchDir, { recursive: true }, (_event, filename) => {
-    if (!filename || !/\.(cjs|js)$/.test(filename)) {
+    if (!watchReady || !filename || !/\.(cjs|js)$/.test(filename)) {
       return;
     }
     // eslint-disable-next-line no-console

@@ -69,8 +69,24 @@ const MOUSE_MODE_IDS = new Set([
 ]);
 
 /**
+ * 当前是否处于备用屏（vim / OpenCode / less 等 TUI）。
+ * 备用屏没有本地 scrollback，滚轮必须交给远端应用。
+ *
+ * @param term - xterm 实例
+ * @returns 是否为备用屏
+ */
+function isAlternateScreen(term: Terminal): boolean {
+  try {
+    return term.buffer.active.type === "alternate";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 启动/停止本地鼠标模式抑制。
  * 仅在连接/切回终端时复位一次；不再定时 term.write，以免打断中文输入法。
+ * 备用屏（OpenCode 等）不抑制，否则滚轮无法滚动远端界面。
  *
  * @param enabled - 是否启用（false 时清理可能残留的定时器）
  * @returns {void}
@@ -225,6 +241,29 @@ function bufferOutput(sessionId: string, data: string): void {
   );
 }
 
+/** 进入备用屏的常见 DECSET（与鼠标开启常在同一输出包内） */
+const ENTER_ALT_SCREEN_RE =
+  /\x1b\[\?(?:[\d;]*;)?(?:1049|1047|47)(?:;[\d]*)?h/;
+
+/**
+ * 按会话过滤远端输出：普通屏剥离鼠标跟踪开启序列，备用屏原样放行。
+ *
+ * @param sessionId - 会话 ID
+ * @param data - SSH 原始输出
+ * @returns 过滤后的输出
+ */
+function filterIncomingData(sessionId: string, data: string): string {
+  const pair = terminals.get(sessionId);
+  if (pair?.opened && isAlternateScreen(pair.term)) {
+    return data;
+  }
+  // 同包进入备用屏时勿剥鼠标序列，否则 OpenCode 等 TUI 无法滚轮
+  if (ENTER_ALT_SCREEN_RE.test(data)) {
+    return data;
+  }
+  return stripMouseEnableSequences(data);
+}
+
 /**
  * 从远端输出中剥离「开启鼠标跟踪」的 DECSET，避免 xterm 进入鼠标协议。
  * 不修改关闭序列（…l），也不向 SSH stdin 注入任何内容。
@@ -264,7 +303,7 @@ function isMouseReportInput(data: string): boolean {
 
 /**
  * 在本地 xterm 关闭鼠标跟踪模式（只写终端解析器，不写远端 stdin）。
- * IME 合成期间跳过，避免打断中文输入。
+ * IME 合成期间、以及备用屏（远端 TUI）跳过，避免无法滚动。
  *
  * @param sessionId - 会话 ID
  * @returns {void}
@@ -275,6 +314,9 @@ function disableLocalMouse(sessionId: string): void {
   }
   const pair = terminals.get(sessionId);
   if (!pair?.opened) {
+    return;
+  }
+  if (isAlternateScreen(pair.term)) {
     return;
   }
   pair.term.write(
@@ -300,13 +342,16 @@ function isImeKeyEvent(event: KeyboardEvent): boolean {
 /**
  * 是否应将 xterm onData 写入 SSH。
  * 输入法合成期及刚上屏后的抑制窗口内全部丢弃（改由 compositionend 只发一次）。
+ * 备用屏下的鼠标上报放行，供 OpenCode 等 TUI 滚动/点击。
  *
+ * @param sessionId - 会话 ID
  * @param data - xterm onData 载荷
  * @returns 是否写入远端
  */
-function shouldForwardTerminalInput(data: string): boolean {
+function shouldForwardTerminalInput(sessionId: string, data: string): boolean {
   if (isMouseReportInput(data)) {
-    return false;
+    const pair = terminals.get(sessionId);
+    return Boolean(pair?.opened && isAlternateScreen(pair.term));
   }
   if (imeComposing || Date.now() < imeSuppressInputUntil) {
     return false;
@@ -616,6 +661,7 @@ function ensureTerminal(
       cursorBlink: true,
       convertEol: true,
       rightClickSelectsWord: true,
+      scrollback: 5000,
       // OpenCode 等 TUI 开启鼠标协议时，按住 Shift 拖选仍可选中
       fontFamily:
         'Consolas, "Cascadia Mono", "Sarasa Mono SC", "Courier New", monospace',
@@ -632,10 +678,16 @@ function ensureTerminal(
     term.loadAddon(fit);
     term.loadAddon(new WebLinksAddon(openTerminalLink));
     term.onData((data) => {
-      if (!shouldForwardTerminalInput(data)) {
+      if (!shouldForwardTerminalInput(sessionId, data)) {
         return;
       }
       api.writeSsh(sessionId, data);
+    });
+    term.buffer.onBufferChange(() => {
+      // 退出备用屏后恢复本地选区/滚轮；进入备用屏则交还给远端 TUI
+      if (!isAlternateScreen(term)) {
+        disableLocalMouse(sessionId);
+      }
     });
     pair = { term, fit, opened: false };
     terminals.set(sessionId, pair);
@@ -828,7 +880,7 @@ watch(
 
 onMounted(() => {
   removeData = api.onSshData(({ sessionId, data }) => {
-    const safeData = stripMouseEnableSequences(data);
+    const safeData = filterIncomingData(sessionId, data);
     if (!safeData) {
       return;
     }
@@ -947,7 +999,7 @@ onBeforeUnmount(() => {
         SFTP
       </button>
       <span v-if="paneMode === 'terminal'" class="copy-tip">
-        链接：Ctrl+单击 · 粘贴：Ctrl+Shift+V / 右键 · 复制：Ctrl+Shift+C
+        链接：Ctrl+单击 · 粘贴：Ctrl+Shift+V / 右键 · 复制：Ctrl+Shift+C · TUI 内按住 Shift 可选中
       </span>
       <span v-if="copyHint" class="copy-toast">{{ copyHint }}</span>
     </div>

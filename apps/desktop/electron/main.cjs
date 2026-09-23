@@ -9,7 +9,7 @@ const { ImportExportService } = require("./import-export.cjs");
 const { registerIpcHandlers, createSshEmitter } = require("./ipc.cjs");
 
 const isDev = !app.isPackaged;
-const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://localhost:5174";
+const DEV_URL = process.env.VITE_DEV_SERVER_URL || "http://127.0.0.1:5174/";
 
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
@@ -115,9 +115,40 @@ function createWindow() {
         event.preventDefault();
       }
     });
+    mainWindow.webContents.on("console-message", (_e, level, message) => {
+      if (level >= 2) {
+        console.error(`[renderer] ${message}`);
+      }
+    });
   } else {
     void mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+
+  mainWindow.webContents.on("did-finish-load", () => {
+    if (!isDev) {
+      return;
+    }
+    void mainWindow?.webContents
+      .executeJavaScript(
+        `({ href: location.href, hasBridge: Boolean(window.ezshell), appHtml: (document.querySelector('#app')?.innerHTML || '').slice(0, 120) })`,
+      )
+      .then((info) => {
+        console.log("[EZShell] 渲染层就绪", info);
+        if (!info?.hasBridge) {
+          console.error(
+            "[EZShell] 未注入桌面桥接，请确认当前加载的是 Electron 窗口且 preload 生效",
+          );
+        }
+        if (!info?.appHtml) {
+          console.error(
+            "[EZShell] #app 为空。若 URL 不是 127.0.0.1:5174，可能撞上其它项目的 Vite 端口",
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("[EZShell] 渲染诊断失败", error);
+      });
+  });
 
   mainWindow.webContents.on("did-fail-load", (_event, code, desc, url) => {
     console.error("[EZShell] 页面加载失败", { code, desc, url });
